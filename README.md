@@ -7,7 +7,7 @@ Written in Raku as a small project to help me learn the language.
 * bin/csv2json
 * bin/jsonStream2csv
 
-The scripts depend on Text::CSV, JSON::Fast, and JSON::Stream.
+The scripts depend on Text::CSV, JSON::Fast, and JSON::Stream. NOTE: Please feel free to contact me or suggest changes via the github project.
 
 **COPYRIGHT and LICENSE**
 
