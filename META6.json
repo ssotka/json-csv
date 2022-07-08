@@ -1,0 +1,34 @@
+{
+  "name": "JSON-CSV",
+  "description": "Provides scripts to convert between CSV and JSON.",
+  "version": "0.0.1",
+  "perl": "6.c",
+  "authors": [
+    "Scott Sotka"
+  ],
+  "auth": "github:ssotka",
+  "depends": [
+    "Text::CSV",
+    "JSON::Fast",
+    "JSON::Stream"
+  ],
+  "build-depends": [],
+  "test-depends": [],
+  "provides": {
+    "csv2json": "bin/csv2json",
+    "json2csv": "bin/json2csv",
+    "jsonStream2csv": "bin/jsonStream2csv"
+  },
+  "resources": [
+    "SampleCSVFile_119kb.csv",
+    "SampleCSVFile_converted.json"
+  ],
+  "license": "Artistic-2.0",
+  "tags": [
+    "json",
+    "csv",
+    "conversion"
+  ],
+  "api": "0",
+  "source-url": "git://github.com/ssotka/json-csv.git"
+}

@@ -1,0 +1,74 @@
+#!/usr/bin/env raku
+use v6.d;
+
+use Text::CSV;
+use JSON::Fast;
+
+=begin pod
+
+=head1 csv2json
+
+This script should be passed a filename containing CSV data and the first line should be the headers.
+The script parses the csv and converts the data to equivalent JSON and outputs that.
+The format of the JSON is as follows:
+
+    [
+        {
+          "header1": "value1",
+          "header2": "value2",
+          "header3": "value3"
+        },
+        {
+          "header1": "value1a",
+          "header2": "value2a",
+          "header3": "value3a"
+        },
+        ...
+    ]
+
+=end pod
+
+enum EOL (
+    LF => "\n";
+    CR => "\r";
+    CRLF => "\r\n";
+);
+
+multi MAIN( :$infile = $*IN, :$outfile = $*OUT, :$delimeter = ',', EOL :$end-of-line = LF ) {
+    my $csv = Text::CSV.new( sep => $delimeter, eol => $end-of-line );
+    my $in-file = open $infile, :r;
+    
+    # Read the header line
+    my @headers = $csv.getline( $in-file );
+    
+    # open the output file and write the array open character
+    my $out-file = open $outfile, :w;
+    $out-file.say: "[";
+    
+    my $line = 0;
+    
+    # Process the rest of the file
+    while $csv.getline( $in-file ) -> @row {
+        if $line > 0 { $out-file.say: ","; }
+        # if this is not the first line, add a comma to separate the JSON objects
+        $line++;
+        my %row;
+        
+        # Loop through the headers and add the values to the hash
+        for @headers -> $header {
+            %row{$header} = @row.shift;
+        }
+        # Write the JSON object to the output file
+        $out-file.print: to-json( %row );
+    }
+    # Write the array close character
+    $out-file.say: "\n]";
+    
+    # Close the files
+    $in-file.close;
+    $out-file.close;
+}
+
+multi MAIN( Bool :$man ) {
+    run $*EXECUTABLE, '--doc', $*PROGRAM;
+}

@@ -1,0 +1,64 @@
+#!/usr/bin/env raku
+use v6.d;
+
+use Text::CSV;
+use JSON::Fast;
+
+=begin pod
+
+=head1 jsonStream2csv
+
+jsonStream2csv takes a JSON source file and
+converts it to a CSV file or stream. We make no claims about how large of a JSON file it can handle.
+(For large files you can use the L<jsonStream2csv> script.)
+The format of the JSON source is as follows:
+
+     [
+       {
+         ...
+       },
+       {
+         ...
+       },
+       ...
+     ]
+
+=end pod
+
+enum EOL (
+    LF => "\n";
+    CR => "\r";
+    CRLF => "\r\n";
+);
+
+multi MAIN( :$infile = $*IN, :$outfile = $*OUT, :$delimeter = ',', EOL :$end-of-line = LF  ) {
+    my $csv = Text::CSV.new( eol => $end-of-line, sep => $delimeter );
+    my $in = open $infile, :r or die "Could not open $infile for reading: $!";
+    my $out = open $outfile, :w or die "Could not open $outfile for writing: $!";
+    
+    # Read in the entire JSON file and turn it into an array of hashes.
+    my $json_str = $in.slurp;
+    my @json_objs = from-json( $json_str );
+    
+    # the headers are the keys of the first object in the array.
+    my @fields = @json_objs[0].keys;
+    
+    # Write the headers to the CSV file.
+    $csv.combine( @fields );
+    $out.print( $csv.string );
+    
+    # Write the data to the CSV file.
+    for @json_objs -> %obj {
+        my @values = %obj.{@fields};
+        # ensures the order of the values is the same as the order of the headers.
+        $csv.combine( @values );
+        $out.print( $csv.string );
+    }
+    
+    $out.close;
+    $in.close;
+}
+
+multi MAIN( Bool :$man ) {
+    run $*EXECUTABLE, '--doc', $*PROGRAM;
+}

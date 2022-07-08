@@ -1,0 +1,82 @@
+#!/usr/bin/env raku
+use v6.d;
+
+use Text::CSV;
+use JSON::Stream;
+
+=begin pod
+
+=head1 jsonStream2csv
+
+jsonStream2csv takes a JSON source (file or stream) of any size and
+converts it to a CSV file or stream.
+The format of the JSON source is as follows:
+
+     [
+       {
+         ...
+       },
+       {
+         ...
+       },
+       ...
+     ]
+
+=end pod
+
+enum EOL (
+    LF => "\n";
+    CR => "\r";
+    CRLF => "\r\n";
+);
+
+multi MAIN( :$infile = $*IN, :$outfile = $*OUT, :$delimeter = ',', :$end-of-line = LF ) {
+    my $csv = Text::CSV.new( eol => "\n", sep => $delimeter );
+    my $out = open $outfile, :w or die "Could not open $outfile for writing: $!";
+    my $in = open $infile, :r or die "Could not open $infile for reading: $!";
+    
+    my %seen;
+    my @header;
+    my %line;
+    my Bool $headers_written = False;
+    
+    react whenever json-stream $in.open.Supply, '$.*.*' -> ( Str :$key, Str :$value ) {
+        my $key1 = $key.subst( /\$\.. *\./, '' );
+        
+        # If we've seen this key before, first write the previous line
+        # and the header line if we haven't already.
+        if %seen{$key1} {
+            if !$headers_written {
+                # output the header
+                $csv.combine( @header ) or die "Could not combine header: $!";
+                $out.print( $csv.string );
+                $headers_written = True;
+            }
+            # output the current line
+            $csv.combine( %line{@header} ) or die "Could not combine line: $!";
+            $out.print( $csv.string );
+            
+            # set all seen values to 0
+            %seen{$_} = 0 for @header;
+            
+            # start the next line
+            %line{$key1} = $value;
+            %seen{$key1} = 1;
+        }
+        # If we haven't seen this key before, add it's value to the line hash
+        # and add the key to the header array unless we've already output the headers
+        else {
+            unless $headers_written {
+                push @header, $key1;
+            }
+            %line{$key1} = $value;
+            %seen{$key1} = 1;
+        }
+    }
+    $out.close;
+    $in.close;
+}
+
+multi MAIN( Bool :$man ) {
+    run $*EXECUTABLE, '--doc', $*PROGRAM;
+}
