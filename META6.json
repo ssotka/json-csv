@@ -6,7 +6,7 @@
   "authors": [
     "Scott Sotka"
   ],
-  "auth": "github:ssotka",
+  "auth": "zef:ssotka",
   "depends": [
     "Text::CSV",
     "JSON::Fast",
